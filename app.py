@@ -28,8 +28,8 @@ class LEDMatrix(object):
         offscreen_canvas = self.matrix.CreateFrameCanvas()
         cssc_open_font = graphics.Font()
         cssc_open_font.LoadFont("./fonts/5x8.bdf")
-        other_font = graphics.Font()
-        other_font.LoadFont("./fonts/6x12.bdf")
+        cssc_font = graphics.Font()
+        cssc_font.LoadFont("./fonts/6x12.bdf")
 
         clock_day_font = graphics.Font()
         clock_day_font.LoadFont("./fonts/6x9.bdf")
@@ -37,24 +37,25 @@ class LEDMatrix(object):
         clock_font = graphics.Font()
         clock_font.LoadFont("./fonts/5x8.bdf")
 
+        scroll_font = graphics.Font()
+        scroll_font.LoadFont("./fonts/6x13.bdf")
+
         textColor = graphics.Color(255, 255, 0)
         pos = offscreen_canvas.width
 
 
         while True:
             offscreen_canvas.Clear()
+
+            # CSSC DOOR STATUS
             if self.open:
                 open_status = "Open"
                 open_status_colour = graphics.Color(11,218,81)
             else:
                 open_status = "Closed"
                 open_status_colour = graphics.Color(220,20,60)
-            graphics.DrawText(offscreen_canvas, other_font, 1, 16, graphics.Color(255,165,0), "CSSC:")
+            graphics.DrawText(offscreen_canvas, cssc_font, 1, 16, graphics.Color(255,165,0), "CSSC:")
             graphics.DrawText(offscreen_canvas, cssc_open_font, 34, 16, open_status_colour, open_status)
-            # _len = graphics.DrawText(offscreen_canvas, other_font, pos, 23, textColor, my_text)
-            # pos -= 1
-            # if (pos + _len < 0):
-            #     pos = offscreen_canvas.width
 
             # time
             current_time = datetime.now().strftime('%H:%M:%S')
@@ -63,8 +64,17 @@ class LEDMatrix(object):
             graphics.DrawText(offscreen_canvas, clock_day_font, 1, 7, graphics.Color(255,165,0), current_day)
             graphics.DrawText(offscreen_canvas, clock_font, 23, 7, graphics.Color(255,165,0), current_time)
 
+            #
+            graphics.DrawLine(offscreen_canvas, 0, 18, 64, 18, graphics.Color(255, 90, 0))
 
-            time.sleep(0.05)
+            _len = graphics.DrawText(offscreen_canvas, scroll_font, pos, 30, textColor, "HAII NANI GA SUKI?? Study well for your exams!! Come to our CSSC Monthly BBQs ")
+            pos -= 1
+            if (pos + _len < 0):
+                pos = offscreen_canvas.width
+
+
+
+            time.sleep(0.02)
             offscreen_canvas = self.matrix.SwapOnVSync(offscreen_canvas)
 
     def process(self):
