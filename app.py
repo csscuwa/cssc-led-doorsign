@@ -16,7 +16,7 @@ if test:
 else:
     from rgbmatrix import RGBMatrix, RGBMatrixOptions, graphics
 
-    gpio_slow = 3
+    gpio_slow = 4
 
 
 class LEDMatrix(object):
