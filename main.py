@@ -42,7 +42,7 @@ def door_status():
             door_status = True
         else:
             door_status = False
-        print(door_status)
+ #       print(door_status)
 
         time.sleep(5)
 
@@ -82,7 +82,7 @@ class LEDMatrix():
             else:
                 open_status = "Closed"
                 open_status_colour = graphics.Color(220,20,60)
-            graphics.DrawText(offscreen_canvas, cssc_font, 1, 16, graphics.Color(255,165,0), "CSSC:")
+            graphics.DrawText(offscreen_canvas, cssc_font, 1, 16, graphics.Color(255,165,0), "Door:")
             graphics.DrawText(offscreen_canvas, cssc_open_font, 34, 16, open_status_colour, open_status)
 
             # time
