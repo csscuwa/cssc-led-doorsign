@@ -2,24 +2,52 @@ import time
 import sys
 import os
 
+import requests
+
+import threading
+
 from datetime import datetime
 import time
 
-test = False
+import dotenv
 
+dotenv.load_dotenv()
+
+password = os.getenv('PASSWORD')
+
+# Variables
+
+gpio_slow = 4
+
+# Dev Mode
 if "--dev" in sys.argv:
-    test = True
-
-if test:
     from RGBMatrixEmulator import RGBMatrix, RGBMatrixOptions, graphics
     gpio_slow = 0
 else:
     from rgbmatrix import RGBMatrix, RGBMatrixOptions, graphics
 
-    gpio_slow = 4
+door_status = None
+
+def door_status():
+    global door_status
+    s = requests.Session()
+
+    r = s.post('https://portal.cssc.asn.au/api/auth', data={'password': 'SussyDigger12'})
+
+    print(r.json())
+
+    while True:
+        json_data = s.get("https://portal.cssc.asn.au/api/door_status").json()
+        if json_data["door_open"]:
+            door_status = True
+        else:
+            door_status = False
+        print(door_status)
+
+        time.sleep(5)
 
 
-class LEDMatrix(object):
+class LEDMatrix():
     def __init__(self, *args, **kwargs):
         self.open = True
 
@@ -48,7 +76,7 @@ class LEDMatrix(object):
             offscreen_canvas.Clear()
 
             # CSSC DOOR STATUS
-            if self.open:
+            if door_status:
                 open_status = "Open"
                 open_status_colour = graphics.Color(11,218,81)
             else:
@@ -74,7 +102,7 @@ class LEDMatrix(object):
 
 
 
-            time.sleep(0.02)
+            time.sleep(0.019)
             offscreen_canvas = self.matrix.SwapOnVSync(offscreen_canvas)
 
     def process(self):
@@ -107,7 +135,7 @@ class LEDMatrix(object):
 
         try:
             # Start loop
-            print("Press CTRL-C to stop sample")
+            print("Press CTRL-C to stop app")
             self.run()
         except KeyboardInterrupt:
             print("Exiting\n")
@@ -116,4 +144,6 @@ class LEDMatrix(object):
         return True
 
 matrix = LEDMatrix()
+
+threading.Thread(target=door_status).start()
 matrix.process()
