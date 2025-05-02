@@ -27,22 +27,20 @@ else:
     from rgbmatrix import RGBMatrix, RGBMatrixOptions, graphics
 
 door_status = None
+led_text = "Default"
 
-def door_status():
-    global door_status
+def _door_status():
+    global door_status, led_text
     s = requests.Session()
 
-    r = s.post('https://portal.cssc.asn.au/api/auth', data={'password': 'SussyDigger12'})
+    r = s.post('https://portal.cssc.asn.au/api/auth', data={'password': password})
 
     print(r.json())
 
     while True:
         json_data = s.get("https://portal.cssc.asn.au/api/door_status").json()
-        if json_data["door_open"]:
-            door_status = True
-        else:
-            door_status = False
- #       print(door_status)
+        door_status = json_data["door_open"]
+        led_text = json_data["scrolltext"]
 
         time.sleep(5)
 
@@ -95,7 +93,7 @@ class LEDMatrix():
             #
             graphics.DrawLine(offscreen_canvas, 0, 18, 64, 18, graphics.Color(255, 90, 0))
 
-            _len = graphics.DrawText(offscreen_canvas, scroll_font, pos, 30, textColor, "HAII NANI GA SUKI?? Study well for your exams!! Come to our CSSC Monthly BBQs ")
+            _len = graphics.DrawText(offscreen_canvas, scroll_font, pos, 30, textColor, led_text)
             pos -= 1
             if (pos + _len < 0):
                 pos = offscreen_canvas.width
@@ -145,5 +143,5 @@ class LEDMatrix():
 
 matrix = LEDMatrix()
 
-threading.Thread(target=door_status).start()
+threading.Thread(target=_door_status).start()
 matrix.process()
