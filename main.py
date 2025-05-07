@@ -28,20 +28,28 @@ else:
 
 door_status = None
 led_text = "Default"
+headers = {'User-Agent': '*'}
+
+def _login_door(s):
+    r = s.post('https://portal.cssc.asn.au/api/auth', data={'password': password}, headers=headers)
+
+    return r
+
 
 def _door_status():
     global door_status, led_text
     s = requests.Session()
 
-    r = s.post('https://portal.cssc.asn.au/api/auth', data={'password': password})
-
-    print(r.json())
+    _login_door(s)
 
     while True:
-        json_data = s.get("https://portal.cssc.asn.au/api/door_status").json()
-        door_status = json_data["door_open"]
-        led_text = json_data["scrolltext"]
-
+        try:
+            json_data = s.get("https://portal.cssc.asn.au/api/door_status", headers=headers).json()
+            door_status = json_data["door_open"]
+            led_text = json_data["scrolltext"]
+        except requests.exceptions.RequestException as e:
+            print(e)
+            _login_door(s)
         time.sleep(5)
 
 
