@@ -36,7 +36,7 @@ def _door_status():
 
     while True:
         try:
-            json_data = requests.get("https://portal.cssc.asn.au/api/door_status", headers=headers).json()
+            json_data = requests.get("https://dash.cssc.asn.au/api/door_status", headers=headers).json()
             door_status = int(json_data["door_status"])
             led_text = json_data["door_text"]
         except requests.exceptions.RequestException as e:
