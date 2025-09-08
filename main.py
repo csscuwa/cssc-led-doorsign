@@ -18,28 +18,41 @@ password = os.getenv('PASSWORD')
 # Variables
 
 gpio_slow = 4
+url = "https://dash.cssc.asn.au/api/door"
 
 # Dev Mode
 if "--dev" in sys.argv:
     from RGBMatrixEmulator import RGBMatrix, RGBMatrixOptions, graphics
     gpio_slow = 0
+    url = "http://127.0.0.1:5000/api/door"
 else:
     from rgbmatrix import RGBMatrix, RGBMatrixOptions, graphics
+
+
+connected = True
 
 door_status = None
 led_text = "Default"
 headers = {'User-Agent': '*'}
 
+def set_failed_connection():
+    global connected, led_text
+    if connected:
+        connected = False
+        led_text = "RPI Unable to reach CSSC API"
 
 def _door_status():
-    global door_status, led_text
+    global door_status, led_text, connected
 
     while True:
         try:
-            json_data = requests.get("https://dash.cssc.asn.au/api/door_status", headers=headers).json()
+            json_data = requests.get(url, headers=headers).json()
+            connected = True
             door_status = int(json_data["door_status"])
             led_text = json_data["door_text"]
+
         except requests.exceptions.RequestException as e:
+            set_failed_connection()
             print(e)
         time.sleep(5)
 
@@ -68,36 +81,46 @@ class LEDMatrix():
         textColor = graphics.Color(255, 255, 0)
         pos = offscreen_canvas.width
 
+        error_flash_count = 0
+
 
         while True:
             offscreen_canvas.Clear()
 
-            # CSSC DOOR STATUS
-            if door_status:
-                open_status = "Open"
-                open_status_colour = graphics.Color(11,218,81)
-            else:
-                open_status = "Closed"
-                open_status_colour = graphics.Color(220,20,60)
-            graphics.DrawText(offscreen_canvas, cssc_font, 1, 16, graphics.Color(255,165,0), "Door:")
-            graphics.DrawText(offscreen_canvas, cssc_open_font, 34, 16, open_status_colour, open_status)
-
-            # time
+            # Time Drawing
             current_time = datetime.now().strftime('%H:%M:%S')
             current_day = ''.join(datetime.now().strftime('%A').strip()[0:3])
 
-            graphics.DrawText(offscreen_canvas, clock_day_font, 1, 7, graphics.Color(255,165,0), current_day)
-            graphics.DrawText(offscreen_canvas, clock_font, 23, 7, graphics.Color(255,165,0), current_time)
+            graphics.DrawText(offscreen_canvas, clock_day_font, 1, 7, graphics.Color(255, 165, 0), current_day)
+            graphics.DrawText(offscreen_canvas, clock_font, 23, 7, graphics.Color(255, 165, 0), current_time)
 
-            #
+            # LINE
             graphics.DrawLine(offscreen_canvas, 0, 18, 64, 18, graphics.Color(255, 90, 0))
+
+            if not connected:
+                if error_flash_count > 12:
+                    graphics.DrawText(offscreen_canvas, cssc_font, 1, 16, graphics.Color(220, 20, 60), "! ERROR !")
+                if error_flash_count == 50:
+                    error_flash_count = 0
+
+                error_flash_count += 1
+
+            else:
+                # CSSC DOOR STATUS
+                if door_status:
+                    open_status = "Open"
+                    open_status_colour = graphics.Color(11, 218, 81)
+                else:
+                    open_status = "Closed"
+                    open_status_colour = graphics.Color(220, 20, 60)
+
+                graphics.DrawText(offscreen_canvas, cssc_font, 1, 16, graphics.Color(255, 165, 0), "Door:")
+                graphics.DrawText(offscreen_canvas, cssc_open_font, 34, 16, open_status_colour, open_status)
 
             _len = graphics.DrawText(offscreen_canvas, scroll_font, pos, 30, textColor, led_text)
             pos -= 1
             if (pos + _len < 0):
                 pos = offscreen_canvas.width
-
-
 
             time.sleep(0.019)
             offscreen_canvas = self.matrix.SwapOnVSync(offscreen_canvas)
