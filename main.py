@@ -13,12 +13,12 @@ import dotenv
 
 dotenv.load_dotenv()
 
-password = os.getenv('PASSWORD')
+api_token = os.getenv('API_TOKEN')
 
 # Variables
 
 gpio_slow = 4
-url = "https://dash.cssc.asn.au/api/door"
+url = "https://dash.cssc.asn.au/api/door/ping"
 
 # Dev Mode
 if "--dev" in sys.argv:
@@ -33,7 +33,7 @@ connected = True
 
 door_status = None
 led_text = "Default"
-headers = {'User-Agent': '*'}
+headers = {'User-Agent': '*', "Authorization": f"Bearer {api_token}"}
 
 def set_failed_connection():
     global connected, led_text
